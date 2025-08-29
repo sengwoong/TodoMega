@@ -7,10 +7,13 @@ import Login from './pages/Login';
 import { AuthProvider, useAuth } from './hook/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Button from 'components/Button';
+import Modal from 'components/Modal';
 
 function Nav() {
   const { user, isAuthenticated, signOut } = useAuth();
+  const [signOutOpen, setSignOutOpen] = React.useState(false);
   return (
+    <>
     <nav style={{ padding: 16, borderBottom: '1px solid #ddd', marginBottom: 24 }}>
       <NavLink to="/" end style={{ marginRight: 16 }}>
         Todos
@@ -21,12 +24,23 @@ function Nav() {
       {isAuthenticated ? (
         <span style={{ float: 'right' }}>
           <span style={{ marginRight: 8 }}>{user?.name}(@{user?.username})</span>
-          <Button onClick={signOut} variant="ghost">로그아웃</Button>
+          <Button onClick={() => setSignOutOpen(true)} variant="ghost">로그아웃</Button>
         </span>
       ) : (
         <NavLink to="/login" style={{ float: 'right' }}>로그인</NavLink>
       )}
     </nav>
+    <Modal open={signOutOpen} onClose={() => setSignOutOpen(false)}>
+      <Modal.Content>
+        <Modal.Title>확인</Modal.Title>
+        <Modal.Body>정말 로그아웃 하시겠습니까?</Modal.Body>
+        <Modal.Actions>
+          <Button variant="ghost" onClick={() => setSignOutOpen(false)}>취소</Button>
+          <Button variant="primary" onClick={() => { setSignOutOpen(false); signOut(); }}>확인</Button>
+        </Modal.Actions>
+      </Modal.Content>
+    </Modal>
+    </>
   );
 }
 
@@ -45,32 +59,32 @@ function App() {
   const queryClient = new QueryClient();
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <div className="App">
-            <Nav />
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Todos />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/users"
-                element={
-                  <ProtectedRoute>
-                    <Users />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </div>
-        </Router>
-      </QueryClientProvider>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="App">
+              <Nav />
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route
+                  path="/"
+                  element={
+                    <ProtectedRoute>
+                      <Todos />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/users"
+                  element={
+                    <ProtectedRoute>
+                      <Users />
+                    </ProtectedRoute>
+                  }
+                />
+              </Routes>
+            </div>
+          </Router>
+        </QueryClientProvider>
     </AuthProvider>
   );
 }

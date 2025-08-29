@@ -3,12 +3,17 @@ import { useUsersQuery } from 'server/userQueries';
 import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation, useTodosSearch } from 'server/todoQueries';
 import useDebouncedValue from 'hook/useDebouncedValue';
 import Button from 'components/Button';
+import Modal from 'components/Modal';
+import { useAuth } from 'hook/AuthContext';
 
 function Todos() {
+  const { } = useAuth();
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ title: '', username: '' });
   const [search, setSearch] = useState({ q: '', username: '', completed: 'all' });
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
   const { data: todosAll = [], isLoading: isTodosLoading } = useTodosQuery();
   const { data: users = [], isLoading: isUsersLoading } = useUsersQuery();
   const debouncedQ = useDebouncedValue(search.q, 300);
@@ -52,10 +57,20 @@ function Todos() {
   }
 
   async function handleDelete(id) {
+    setPendingDeleteId(id);
+    setConfirmOpen(true);
+  }
+
+  async function confirmDeleteNow() {
     try {
-      await deleteMutation.mutateAsync(id);
+      if (pendingDeleteId != null) {
+        await deleteMutation.mutateAsync(pendingDeleteId);
+      }
     } catch (err) {
       setError(err.message);
+    } finally {
+      setConfirmOpen(false);
+      setPendingDeleteId(null);
     }
   }
 
@@ -142,6 +157,16 @@ function Todos() {
           })}
         </ul>
       )}
+      <Modal open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <Modal.Content>
+          <Modal.Title>확인</Modal.Title>
+          <Modal.Body>정말 삭제하시겠습니까?</Modal.Body>
+          <Modal.Actions>
+            <Button variant="ghost" onClick={() => setConfirmOpen(false)}>취소</Button>
+            <Button variant="danger" onClick={confirmDeleteNow}>삭제</Button>
+          </Modal.Actions>
+        </Modal.Content>
+      </Modal>
     </div>
   );
 }
