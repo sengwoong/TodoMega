@@ -1,11 +1,10 @@
 import './App.css';
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import Todos from './pages/Todos';
 import Users from './pages/Users';
 import Login from './pages/Login';
-import { AuthProvider, useAuth } from 'auth/AuthContext';
-import ProtectedRoute from 'auth/ProtectedRoute';
+import { AuthProvider, useAuth } from 'context/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 function Nav() {
@@ -28,6 +27,17 @@ function Nav() {
       )}
     </nav>
   );
+}
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) return <div style={{ padding: 16 }}>로딩 중...</div>;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+  return children;
 }
 
 function App() {

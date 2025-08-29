@@ -1,32 +1,17 @@
 import React, { useMemo, useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTodos, createTodo, updateTodo, deleteTodo } from 'server/todo';
-import { getUsers } from 'server/user';
+import { useUsersQuery } from 'server/userQueries';
+import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation } from 'server/todoQueries';
 
 function Todos() {
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ title: '', username: '' });
   const [submitting, setSubmitting] = useState(false);
-  const queryClient = useQueryClient();
+  const { data: todos = [], isLoading: isTodosLoading } = useTodosQuery();
+  const { data: users = [], isLoading: isUsersLoading } = useUsersQuery();
 
-  const { data: todos = [], isLoading: isTodosLoading } = useQuery({ queryKey: ['todos'], queryFn: getTodos });
-  const { data: users = [], isLoading: isUsersLoading } = useQuery({ queryKey: ['users'], queryFn: getUsers });
-
-  const createMutation = useMutation({
-    mutationFn: createTodo,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-    onError: (err) => setError(err.message)
-  });
-  const updateMutation = useMutation({
-    mutationFn: ({ id, partial }) => updateTodo(id, partial),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-    onError: (err) => setError(err.message)
-  });
-  const deleteMutation = useMutation({
-    mutationFn: deleteTodo,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
-    onError: (err) => setError(err.message)
-  });
+  const createMutation = useCreateTodoMutation({ onError: (err) => setError(err.message) });
+  const updateMutation = useUpdateTodoMutation({ onError: (err) => setError(err.message) });
+  const deleteMutation = useDeleteTodoMutation({ onError: (err) => setError(err.message) });
 
   const usernameToName = useMemo(() => {
     const map = new Map();

@@ -1,29 +1,15 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getUsers, createUser, deleteUser } from 'server/user';
+import { useUsersQuery, useCreateUserMutation, useDeleteUserMutation } from 'server/userQueries';
 
 function Users() {
-  const queryClient = useQueryClient();
   const [error, setError] = useState(null);
-  const { data: users = [], isLoading } = useQuery({ queryKey: ['users'], queryFn: getUsers });
+  const { data: users = [], isLoading } = useUsersQuery();
   const [form, setForm] = useState({ username: '', name: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  const createMutation = useMutation({
-    mutationFn: createUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (err) => setError(err.message)
-  });
+  const createMutation = useCreateUserMutation({ onError: (err) => setError(err.message) });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteUser,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-    onError: (err) => setError(err.message)
-  });
+  const deleteMutation = useDeleteUserMutation({ onError: (err) => setError(err.message) });
 
   async function handleSubmit(e) {
     e.preventDefault();
