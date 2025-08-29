@@ -1,36 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTodos, createTodo, updateTodo, deleteTodo } from 'server/todo';
 import { getUsers } from 'server/user';
 
 function Todos() {
-  const [todos, setTodos] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ title: '', username: '' });
   const [submitting, setSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    let isCancelled = false;
-    async function load() {
-      try {
-        setLoading(true);
-        const [t, u] = await Promise.all([getTodos(), getUsers()]);
-        if (!isCancelled) {
-          setTodos(Array.isArray(t) ? t : []);
-          setUsers(Array.isArray(u) ? u : []);
-        }
-      } catch (err) {
-        if (!isCancelled) setError(err.message);
-      } finally {
-        if (!isCancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
+  const { data: todos = [], isLoading: isTodosLoading } = useQuery({ queryKey: ['todos'], queryFn: getTodos });
+  const { data: users = [], isLoading: isUsersLoading } = useQuery({ queryKey: ['users'], queryFn: getUsers });
+
+  const createMutation = useMutation({
+    mutationFn: createTodo,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onError: (err) => setError(err.message)
+  });
+  const updateMutation = useMutation({
+    mutationFn: ({ id, partial }) => updateTodo(id, partial),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onError: (err) => setError(err.message)
+  });
+  const deleteMutation = useMutation({
+    mutationFn: deleteTodo,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['todos'] }),
+    onError: (err) => setError(err.message)
+  });
 
   const usernameToName = useMemo(() => {
     const map = new Map();
@@ -43,8 +39,7 @@ function Todos() {
     try {
       setSubmitting(true);
       setError(null);
-      const created = await createTodo({ ...form, completed: false });
-      setTodos((prev) => [...prev, created]);
+      await createMutation.mutateAsync({ ...form, completed: false });
       setForm({ title: '', username: '' });
     } catch (err) {
       setError(err.message);
@@ -55,8 +50,7 @@ function Todos() {
 
   async function handleToggle(id, current) {
     try {
-      const updated = await updateTodo(id, { completed: !current });
-      setTodos((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+      await updateMutation.mutateAsync({ id, partial: { completed: !current } });
     } catch (err) {
       setError(err.message);
     }
@@ -64,14 +58,13 @@ function Todos() {
 
   async function handleDelete(id) {
     try {
-      await deleteTodo(id);
-      setTodos((prev) => prev.filter((t) => String(t.id) !== String(id)));
+      await deleteMutation.mutateAsync(id);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  if (loading) return <div style={{ padding: 16 }}>로딩 중...</div>;
+  if (isTodosLoading || isUsersLoading) return <div style={{ padding: 16 }}>로딩 중...</div>;
   return (
     <div style={{ padding: 16 }}>
       <h2 style={{ marginTop: 0 }}>할 일 관리</h2>

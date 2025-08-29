@@ -1,39 +1,36 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getUsers, createUser, deleteUser } from 'server/user';
 
 function Users() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [error, setError] = useState(null);
+  const { data: users = [], isLoading } = useQuery({ queryKey: ['users'], queryFn: getUsers });
   const [form, setForm] = useState({ username: '', name: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    let isCancelled = false;
-    async function load() {
-      try {
-        setLoading(true);
-        const data = await getUsers();
-        if (!isCancelled) setUsers(Array.isArray(data) ? data : []);
-      } catch (err) {
-        if (!isCancelled) setError(err.message);
-      } finally {
-        if (!isCancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      isCancelled = true;
-    };
-  }, []);
+  const createMutation = useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err) => setError(err.message)
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err) => setError(err.message)
+  });
 
   async function handleSubmit(e) {
     e.preventDefault();
     try {
       setSubmitting(true);
       setError(null);
-      const created = await createUser(form);
-      setUsers((prev) => [...prev, created]);
+      await createMutation.mutateAsync(form);
       setForm({ username: '', name: '' });
     } catch (err) {
       setError(err.message);
@@ -44,14 +41,13 @@ function Users() {
 
   async function handleDelete(id) {
     try {
-      await deleteUser(id);
-      setUsers((prev) => prev.filter((u) => String(u.id) !== String(id)));
+      await deleteMutation.mutateAsync(id);
     } catch (err) {
       setError(err.message);
     }
   }
 
-  if (loading) return <div style={{ padding: 16 }}>로딩 중...</div>;
+  if (isLoading) return <div style={{ padding: 16 }}>로딩 중...</div>;
   return (
     <div style={{ padding: 16 }}>
       <h2 style={{ marginTop: 0 }}>사용자 관리</h2>

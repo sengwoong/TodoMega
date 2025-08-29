@@ -6,6 +6,7 @@ import Users from './pages/Users';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from 'auth/AuthContext';
 import ProtectedRoute from 'auth/ProtectedRoute';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 function Nav() {
   const { user, isAuthenticated, signOut } = useAuth();
@@ -30,32 +31,35 @@ function Nav() {
 }
 
 function App() {
+  const queryClient = new QueryClient();
   return (
     <AuthProvider>
-      <Router>
-        <div className="App">
-          <Nav />
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Todos />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/users"
-              element={
-                <ProtectedRoute>
-                  <Users />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
-        </div>
-      </Router>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <div className="App">
+            <Nav />
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Todos />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute>
+                    <Users />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </div>
+        </Router>
+      </QueryClientProvider>
     </AuthProvider>
   );
 }
