@@ -1,4 +1,8 @@
 import './App.css';
+// App 엔트리: 라우팅과 전역 Provider를 연결하는 파일입니다.
+// - AuthProvider: 로그인 상태 전역 공유
+// - QueryClientProvider: React Query 전역 클라이언트
+// - ProtectedRoute: 인증된 사용자만 특정 페이지 접근 허용
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation } from 'react-router-dom';
 import Todos from './pages/Todos';
@@ -30,6 +34,7 @@ function Nav() {
         <NavLink to="/login" style={{ float: 'right' }}>로그인</NavLink>
       )}
     </nav>
+    {/* 로그아웃 확인 모달: 네비게이션 컴포넌트의 로컬 상태로 제어합니다. */}
     <Modal open={signOutOpen} onClose={() => setSignOutOpen(false)}>
       <Modal.Content>
         <Modal.Title>확인</Modal.Title>
@@ -62,9 +67,12 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Router>
             <div className="App">
+              {/* 상단 네비게이션: 라우팅 링크 + 사용자/로그아웃 */}
               <Nav />
               <Routes>
+                {/* 로그인 페이지 (공개) */}
                 <Route path="/login" element={<Login />} />
+                {/* 투두/유저는 보호 라우트 안에서만 접근 */}
                 <Route
                   path="/"
                   element={

@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
-import ModalPortal from 'components/ModalPortal';
+// Modal (컴파운드 컴포넌트 + 포탈)
+// - Root/Content/Title/Body/Actions으로 구성되어 조합해서 사용합니다.
+// - ESC 키와 바깥(백드롭) 클릭으로 닫힐 수 있습니다.
+// - 포탈로 document.body에 렌더되어 페이지 어느 위치에서도 위에 뜹니다.
+import ModalPortal from 'hook/ModalPortal';
 
-const ModalCtx = createContext(null);
+const ModalCtx = createContext(null); // 자식들이 onClose, cfg(설정)에 접근하기 위한 컨텍스트
 
 function Root({ open, onClose, options = {}, children }) {
-
+  // 기본 옵션: 필요 시 options로 덮어씌웁니다.
   const defaults = {
     closeOnBackdrop: true,
     closeOnEsc: true,
@@ -16,6 +20,7 @@ function Root({ open, onClose, options = {}, children }) {
 
   const containerRef = useRef(null);
 
+  // ESC 키로 닫기
   useEffect(() => {
     if (!cfg.closeOnEsc || !open) return;
     function onKey(e) {
@@ -27,6 +32,7 @@ function Root({ open, onClose, options = {}, children }) {
     return () => document.removeEventListener('keydown', onKey);
   }, [cfg.closeOnEsc, onClose, open]);
 
+  // 백드롭 클릭으로 닫기 (컨테이너 자신을 클릭한 경우)
   function handleBackdropClick(e) {
     if (!cfg.closeOnBackdrop) return;
     if (!containerRef.current) return;

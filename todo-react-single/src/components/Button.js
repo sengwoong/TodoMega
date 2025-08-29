@@ -1,4 +1,7 @@
 import React from 'react';
+// Button
+// - 공통 버튼 스타일을 제공해 코드 중복을 줄이고, 일관성을 유지합니다.
+// - variant로 색상을 간단히 바꿀 수 있습니다.
 
 function Button({ children, variant = 'primary', style, ...rest }) {
   const base = {

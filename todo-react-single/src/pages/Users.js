@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+// Users 페이지
+// - 사용자 목록을 조회하고, 새 사용자를 추가/삭제합니다.
+// - 삭제 시에는 모달로 한 번 더 확인을 받아 실수로 인한 제거를 막습니다.
 import { useUsersQuery, useCreateUserMutation, useDeleteUserMutation } from 'server/userQueries';
 import Button from 'components/Button';
 import Modal from 'components/Modal';
@@ -11,10 +14,12 @@ function Users() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
+  // 사용자 추가/삭제를 위한 뮤테이션 훅
   const createMutation = useCreateUserMutation({ onError: (err) => setError(err.message) });
 
   const deleteMutation = useDeleteUserMutation({ onError: (err) => setError(err.message) });
 
+  // 폼 제출 → 사용자 생성
   async function handleSubmit(e) {
     e.preventDefault();
     try {
@@ -29,11 +34,13 @@ function Users() {
     }
   }
 
+  // 삭제 버튼 클릭 시: 실제 삭제 전 확인 모달을 보여줍니다.
   async function handleDelete(id) {
     setPendingDeleteId(id);
     setConfirmOpen(true);
   }
 
+  // 모달에서 "삭제"를 눌렀을 때 실제 삭제를 수행합니다.
   async function confirmDeleteNow() {
     try {
       if (pendingDeleteId != null) {

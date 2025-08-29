@@ -1,4 +1,9 @@
 import React, { useMemo, useState } from 'react';
+// Todos 페이지
+// - React Query 훅으로 서버(임시 백엔드) 데이터에 접근합니다.
+// - 추가/수정/삭제는 "뮤테이션" 훅을 통해 수행합니다.
+// - 검색 입력은 디바운스로 과도한 호출을 막습니다.
+// - 삭제 시 모달로 확인받아 실수를 줄입니다.
 import { useUsersQuery } from 'server/userQueries';
 import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation, useTodosSearch } from 'server/todoQueries';
 import useDebouncedValue from 'hook/useDebouncedValue';
@@ -14,6 +19,7 @@ function Todos() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState(null);
+  // 목록 쿼리: 전체 목록
   const { data: todosAll = [], isLoading: isTodosLoading } = useTodosQuery();
   const { data: users = [], isLoading: isUsersLoading } = useUsersQuery();
   const debouncedQ = useDebouncedValue(search.q, 300);
@@ -22,18 +28,22 @@ function Todos() {
     username: search.username || undefined,
     completed: search.completed === 'all' ? undefined : search.completed === 'true'
   };
+  // 검색 쿼리: 검색어/필터가 있을 때 사용
   const { data: todosSearched = [], isLoading: isSearchLoading } = useTodosSearch(searchParams);
 
+  // 뮤테이션 훅: 생성/수정/삭제. onError로 에러 메시지를 표시합니다.
   const createMutation = useCreateTodoMutation({ onError: (err) => setError(err.message) });
   const updateMutation = useUpdateTodoMutation({ onError: (err) => setError(err.message) });
   const deleteMutation = useDeleteTodoMutation({ onError: (err) => setError(err.message) });
 
+  // 표시용: username → 이름 매핑을 만들어서 화면에 예쁘게 보여줌
   const usernameToName = useMemo(() => {
     const map = new Map();
     users.forEach((u) => map.set(u.username, u.name || u.username));
     return map;
   }, [users]);
 
+  // 추가 이벤트: 제출 시 뮤테이션 호출 → 성공 시 폼 리셋
   async function handleAdd(e) {
     e.preventDefault();
     try {
@@ -48,6 +58,7 @@ function Todos() {
     }
   }
 
+  // 완료 토글: 현재 상태의 반대로 업데이트
   async function handleToggle(id, current) {
     try {
       await updateMutation.mutateAsync({ id, partial: { completed: !current } });
@@ -56,11 +67,13 @@ function Todos() {
     }
   }
 
+  // 삭제 버튼 클릭 시: 실제 삭제 전에 모달을 띄워 한번 더 확인
   async function handleDelete(id) {
     setPendingDeleteId(id);
     setConfirmOpen(true);
   }
 
+  // 모달에서 "삭제"를 눌렀을 때 실제 삭제 수행
   async function confirmDeleteNow() {
     try {
       if (pendingDeleteId != null) {
