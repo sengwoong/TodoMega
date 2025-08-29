@@ -1,8 +1,10 @@
 // User API (in-memory). Seeds once from public/server/user.json via fetch
+// Adds simple token issuing/validation in memory for demo use.
 
 const memory = {
   seeded: false,
-  users: []
+  users: [],
+  tokens: new Map() // token -> { userId, expiresAt|null }
 };
 
 async function ensureSeeded() {
@@ -45,6 +47,51 @@ export async function deleteUser(id) {
   const { users } = await ensureSeeded();
   memory.users = users.filter((u) => String(u.id) !== String(id));
   return { ok: true };
+}
+
+// -----------------------------
+// Token helpers (demo only)
+// -----------------------------
+function randomToken() {
+  try {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('');
+  } catch {
+    return Math.random().toString(36).slice(2) + Date.now().toString(36);
+  }
+}
+
+function isExpired(record) {
+  return record && typeof record.expiresAt === 'number' && Date.now() > record.expiresAt;
+}
+
+export async function login(username, options = {}) {
+  const { users } = await ensureSeeded();
+  const user = users.find((u) => u.username === String(username).trim());
+  if (!user) throw new Error('존재하지 않는 사용자입니다.');
+
+  const token = randomToken();
+  const ttlMs = typeof options.ttlMs === 'number' && options.ttlMs > 0 ? options.ttlMs : null;
+  const record = { userId: user.id, expiresAt: ttlMs ? Date.now() + ttlMs : null };
+  memory.tokens.set(token, record);
+  return { token, user };
+}
+
+export async function logout(token) {
+  memory.tokens.delete(String(token));
+  return { ok: true };
+}
+
+export async function getCurrentUser(token) {
+  await ensureSeeded();
+  const rec = memory.tokens.get(String(token));
+  if (!rec) return null;
+  if (isExpired(rec)) {
+    memory.tokens.delete(String(token));
+    return null;
+  }
+  return memory.users.find((u) => String(u.id) === String(rec.userId)) || null;
 }
 
 
