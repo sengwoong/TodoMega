@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from 'hook/AuthContext';
+import Button from 'components/Button';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -41,7 +42,7 @@ function Login() {
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
           기억하기
         </label>
-        <button type="submit" disabled={loading}>로그인</button>
+        <Button type="submit" disabled={loading} variant="primary">로그인</Button>
       </form>
     </div>
   );

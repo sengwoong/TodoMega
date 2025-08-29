@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { useUsersQuery } from 'server/userQueries';
 import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation, useTodosSearch } from 'server/todoQueries';
 import useDebouncedValue from 'hook/useDebouncedValue';
+import Button from 'components/Button';
 
 function Todos() {
   const [error, setError] = useState(null);
@@ -86,7 +87,7 @@ function Todos() {
             </option>
           ))}
         </select>
-        <button type="submit" disabled={submitting}>추가</button>
+        <Button type="submit" disabled={submitting} variant="primary">추가</Button>
       </form>
 
       <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
@@ -131,10 +132,10 @@ function Todos() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button onClick={() => handleToggle(todo.id, todo.completed)}>
+                  <Button onClick={() => handleToggle(todo.id, todo.completed)} variant="ghost">
                     {todo.completed ? '미완료로' : '완료로'}
-                  </button>
-                  <button onClick={() => handleDelete(todo.id)}>삭제</button>
+                  </Button>
+                  <Button onClick={() => handleDelete(todo.id)} variant="danger">삭제</Button>
                 </div>
               </li>
             );

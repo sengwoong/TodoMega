@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useUsersQuery, useCreateUserMutation, useDeleteUserMutation } from 'server/userQueries';
+import Button from 'components/Button';
 
 function Users() {
   const [error, setError] = useState(null);
@@ -51,7 +52,7 @@ function Users() {
           value={form.name}
           onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
         />
-        <button type="submit" disabled={submitting}>추가</button>
+        <Button type="submit" disabled={submitting} variant="primary">추가</Button>
       </form>
 
       {users.length === 0 ? (
@@ -65,7 +66,7 @@ function Users() {
                 <div style={{ fontSize: 14, color: '#555' }}>@{u.username}</div>
               </div>
               <div>
-                <button onClick={() => handleDelete(u.id)}>삭제</button>
+                <Button onClick={() => handleDelete(u.id)} variant="danger">삭제</Button>
               </div>
             </li>
           ))}

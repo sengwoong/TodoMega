@@ -6,6 +6,7 @@ import Users from './pages/Users';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './hook/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Button from 'components/Button';
 
 function Nav() {
   const { user, isAuthenticated, signOut } = useAuth();
@@ -20,7 +21,7 @@ function Nav() {
       {isAuthenticated ? (
         <span style={{ float: 'right' }}>
           <span style={{ marginRight: 8 }}>{user?.name}(@{user?.username})</span>
-          <button onClick={signOut}>로그아웃</button>
+          <Button onClick={signOut} variant="ghost">로그아웃</Button>
         </span>
       ) : (
         <NavLink to="/login" style={{ float: 'right' }}>로그인</NavLink>
