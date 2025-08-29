@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink, Navigate, useLocation 
 import Todos from './pages/Todos';
 import Users from './pages/Users';
 import Login from './pages/Login';
-import { AuthProvider, useAuth } from 'context/AuthContext';
+import { AuthProvider, useAuth } from './hook/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 function Nav() {

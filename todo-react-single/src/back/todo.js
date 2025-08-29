@@ -55,3 +55,27 @@ export async function deleteTodo(id) {
 }
 
 
+// 검색 API: 제목 또는 사용자명(username) 포함 검색 + 선택적 필터
+export async function searchTodos(params = {}) {
+  const { todos } = await ensureSeeded();
+  const query = String(params.q || '').trim().toLowerCase();
+  const username = params.username ? String(params.username).trim() : '';
+  const completedFlag = typeof params.completed === 'boolean' ? params.completed : null;
+
+  let result = todos.slice();
+  if (query) {
+    result = result.filter((t) =>
+      String(t.title || '').toLowerCase().includes(query) ||
+      String(t.username || '').toLowerCase().includes(query)
+    );
+  }
+  if (username) {
+    result = result.filter((t) => String(t.username) === username);
+  }
+  if (completedFlag !== null) {
+    result = result.filter((t) => Boolean(t.completed) === completedFlag);
+  }
+  return result;
+}
+
+

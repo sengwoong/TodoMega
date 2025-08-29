@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTodos, createTodo, updateTodo, deleteTodo } from 'back/todo';
+import { getTodos, createTodo, updateTodo, deleteTodo, searchTodos } from 'back/todo';
 
 export function useTodosQuery() {
   return useQuery({ queryKey: ['todos'], queryFn: getTodos });
@@ -38,6 +38,15 @@ export function useDeleteTodoMutation(options = {}) {
       options.onSuccess && options.onSuccess(...args);
     },
     onError: options.onError,
+  });
+}
+
+export function useTodosSearch(params, options = {}) {
+  // params: { q, username, completed }
+  return useQuery({
+    queryKey: ['todos', 'search', params],
+    queryFn: () => searchTodos(params || {}),
+    enabled: options.enabled !== undefined ? options.enabled : true,
   });
 }
 

@@ -1,13 +1,22 @@
 import React, { useMemo, useState } from 'react';
 import { useUsersQuery } from 'server/userQueries';
-import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation } from 'server/todoQueries';
+import { useTodosQuery, useCreateTodoMutation, useUpdateTodoMutation, useDeleteTodoMutation, useTodosSearch } from 'server/todoQueries';
+import useDebouncedValue from 'hook/useDebouncedValue';
 
 function Todos() {
   const [error, setError] = useState(null);
   const [form, setForm] = useState({ title: '', username: '' });
+  const [search, setSearch] = useState({ q: '', username: '', completed: 'all' });
   const [submitting, setSubmitting] = useState(false);
-  const { data: todos = [], isLoading: isTodosLoading } = useTodosQuery();
+  const { data: todosAll = [], isLoading: isTodosLoading } = useTodosQuery();
   const { data: users = [], isLoading: isUsersLoading } = useUsersQuery();
+  const debouncedQ = useDebouncedValue(search.q, 300);
+  const searchParams = {
+    q: debouncedQ,
+    username: search.username || undefined,
+    completed: search.completed === 'all' ? undefined : search.completed === 'true'
+  };
+  const { data: todosSearched = [], isLoading: isSearchLoading } = useTodosSearch(searchParams);
 
   const createMutation = useCreateTodoMutation({ onError: (err) => setError(err.message) });
   const updateMutation = useUpdateTodoMutation({ onError: (err) => setError(err.message) });
@@ -49,7 +58,8 @@ function Todos() {
     }
   }
 
-  if (isTodosLoading || isUsersLoading) return <div style={{ padding: 16 }}>로딩 중...</div>;
+  const todos = (search.q || search.username || search.completed !== 'all') ? todosSearched : todosAll;
+  if (isTodosLoading || isUsersLoading || isSearchLoading) return <div style={{ padding: 16 }}>로딩 중...</div>;
   return (
     <div style={{ padding: 16 }}>
       <h2 style={{ marginTop: 0 }}>할 일 관리</h2>
@@ -78,6 +88,33 @@ function Todos() {
         </select>
         <button type="submit" disabled={submitting}>추가</button>
       </form>
+
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <input
+          placeholder="검색어 (제목/username)"
+          value={search.q}
+          onChange={(e) => setSearch((p) => ({ ...p, q: e.target.value }))}
+        />
+        <select
+          value={search.username}
+          onChange={(e) => setSearch((p) => ({ ...p, username: e.target.value }))}
+        >
+          <option value="">모든 사용자</option>
+          {users.map((u) => (
+            <option key={u.id} value={u.username}>
+              {u.name} (@{u.username})
+            </option>
+          ))}
+        </select>
+        <select
+          value={search.completed}
+          onChange={(e) => setSearch((p) => ({ ...p, completed: e.target.value }))}
+        >
+          <option value="all">전체</option>
+          <option value="true">완료</option>
+          <option value="false">미완료</option>
+        </select>
+      </div>
 
       {todos.length === 0 ? (
         <div>할 일이 없습니다.</div>
