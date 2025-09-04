@@ -8,6 +8,7 @@ import User from '@pages/User.jsx'
 import NotFound from '@pages/NotFound.jsx'
 import Login from '@pages/Login.jsx'
 import Todos from '@pages/Todos.jsx'
+import Search from '@pages/Search.jsx'
 
 // 모든 페이지는 @pages/ 아래에 위치합니다
 
@@ -22,6 +23,7 @@ function App() {
           <Link to="/user/10">사용자(10)</Link>
           <Link to="/login">앱 로그인</Link>
           <Link to="/todos">투두</Link>
+          <Link to="/search?q=hello">검색</Link>
         </nav>
       </div>
       <Routes>
@@ -41,6 +43,7 @@ function App() {
         {/* 기존 앱 페이지들 */}
         <Route path="/login" element={<Login />} />
         <Route path="/todos" element={<Todos />} />
+        <Route path="/search" element={<Search />} />
 
         {/* 404 */}
         <Route path="*" element={<NotFound />} />
